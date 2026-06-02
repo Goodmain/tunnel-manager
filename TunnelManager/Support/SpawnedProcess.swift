@@ -10,7 +10,7 @@ import Darwin
 /// `onOutput`/`onTermination` handlers are passed into init so they are wired
 /// BEFORE the child runs — no early-output race. Termination fires only after
 /// both pipes hit EOF, so the last error line is never lost.
-final class SpawnedProcess {
+final class SpawnedProcess: @unchecked Sendable {
     let pid: pid_t
     /// Process-group id. Equals `pid` because the child is its own group leader.
     var pgid: pid_t { pid }
@@ -147,5 +147,19 @@ final class SpawnedProcess {
     /// Synchronous best-effort kill for app teardown (design D2 / applicationWillTerminate).
     func terminateGroupSync() {
         kill(-pgid, SIGTERM)
+    }
+
+    /// Blocking, escalating group kill for quit teardown: SIGTERM → poll until the
+    /// group is gone or `timeout` elapses → SIGKILL any survivor. Call off-main.
+    func terminateGroupBlocking(timeout: TimeInterval = 1.0) {
+        kill(-pgid, SIGTERM)
+        let deadline = Date().addingTimeInterval(timeout)
+        // kill(-pgid, 0) returns -1/ESRCH once no process in the group remains.
+        while kill(-pgid, 0) == 0 && Date() < deadline {
+            usleep(50_000)  // 50ms
+        }
+        if kill(-pgid, 0) == 0 {
+            kill(-pgid, SIGKILL)
+        }
     }
 }

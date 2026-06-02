@@ -32,8 +32,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
     }
 
+    /// Guarantee teardown finishes before the app exits (D1). Cancel respawn
+    /// sources on the main actor, then kill process groups off-main (escalating
+    /// to SIGKILL), then allow termination. Capped so quit never hangs.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let live = tunnelManager.prepareForQuit()
+        guard !live.isEmpty else { return .terminateNow }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let group = DispatchGroup()
+            for process in live {
+                group.enter()
+                DispatchQueue.global(qos: .userInitiated).async {
+                    process.terminateGroupBlocking(timeout: 1.0)
+                    group.leave()
+                }
+            }
+            // Overall budget: quit regardless after this, so a wedged child can't hang it.
+            _ = group.wait(timeout: .now() + 1.5)
+            DispatchQueue.main.async {
+                NSApp.reply(toApplicationShouldTerminate: true)
+            }
+        }
+        return .terminateLater
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
-        // Tear down all tunnels synchronously so no plugin/port is orphaned (D2).
+        // Fallback for termination paths that skip applicationShouldTerminate.
+        // Idempotent after prepareForQuit (empty process map second time).
         tunnelManager.terminateAll()
     }
 
