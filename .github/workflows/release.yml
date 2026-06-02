@@ -69,10 +69,11 @@ jobs:
           end
           EOF
           cd tap
-          if git diff --quiet; then
+          git add Casks/tunnel-manager.rb
+          # Check the STAGED diff so a brand-new (untracked) cask is detected too.
+          if git diff --cached --quiet; then
             echo "Cask unchanged; nothing to push."
           else
-            git add Casks/tunnel-manager.rb
             git -c user.name="release-bot" \
                 -c user.email="release-bot@users.noreply.github.com" \
                 commit -m "tunnel-manager ${VERSION}"
