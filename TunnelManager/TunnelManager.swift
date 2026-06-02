@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 import AppKit
+import Network
+import Darwin
 
 /// Runtime engine for tunnels (tunnel-lifecycle capability). `@MainActor` so all
 /// state mutation and `@Published` updates happen on main (design D12); blocking
@@ -29,17 +31,26 @@ final class TunnelManager: ObservableObject {
     private var expectedSleepDrops: Set<UUID> = []
     private var isSleeping = false
 
+    /// Process-group id per connection, so the port-in-use check can recognize a
+    /// stale process WE spawned (vs a foreign orphan).
+    private var spawnedPgids: [UUID: pid_t] = [:]
+
+    /// Network-connectivity monitoring (network-drop recovery).
+    private let pathMonitor = NWPathMonitor()
+    private var networkDown = false
+    private var suspendedForNetwork: Set<UUID> = []
+
     private var cachedPath: String = ""
     private var awsVaultPath: String?
 
     private let readinessTimeout: TimeInterval = 45  // generous: covers slow MFA (D5/D10)
-    private let maxReconnectAttempts = 5             // bound the storm (tunnel-lifecycle)
     private let outputBufferLimit = 8 * 1024
 
     init(store: ConnectionStore, settings: SettingsStore) {
         self.store = store
         self.settings = settings
         registerSleepWakeObservers()
+        startNetworkMonitor()
     }
 
     // MARK: - Launch configuration (D1)
@@ -122,15 +133,10 @@ final class TunnelManager: ObservableObject {
         let id = connection.id
         setState(id, .connecting)
 
-        // Pre-flight: port already taken? Possibly an orphan from a prior run (D7/D18).
+        // Pre-flight: free the local port. Recycle our own stale process (e.g. a
+        // wedged tunnel after a network drop); only a foreign holder is an orphan.
         let port = connection.localPort
-        let occupied = await Task.detached { PortProbe.isListening(port: port) }.value
-        if occupied {
-            let pid = await Task.detached { PortProbe.holdingPID(port: port) }.value
-            let pidText = pid.map { " (PID \($0))" } ?? ""
-            setState(id, .failed("Local port \(port) in use\(pidText) — possibly an orphaned tunnel from a previous session."))
-            return
-        }
+        guard await reclaimPort(id: id, port: port) else { return }  // sets .failed on foreign orphan
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
 
         // Serialize credential acquisition per profile so concurrent starts trigger
@@ -173,6 +179,7 @@ final class TunnelManager: ObservableObject {
             return
         }
         processes[id] = process
+        spawnedPgids[id] = process.pgid
 
         // If the user toggled off while we were resolving/spawning, tear down now (D17).
         if Task.isCancelled || intent[id] != true {
@@ -228,6 +235,7 @@ final class TunnelManager: ObservableObject {
 
     private func handleTermination(id: UUID, exitCode: Int32) {
         processes[id] = nil
+        spawnedPgids[id] = nil
 
         // Intentional stop already settled the state.
         guard intent[id] == true else { return }
@@ -240,8 +248,9 @@ final class TunnelManager: ObservableObject {
             NSLog("[tunnel %@] exited unexpectedly, code=%d. Output:\n%@", id.uuidString.prefix(8) as CVarArg, exitCode, out)
         }
 
-        // Sleep-induced drop: don't count toward the cap, wait for wake (D14).
-        if isSleeping || expectedSleepDrops.contains(id) {
+        // Sleep- or network-induced drop: don't count toward the cap; wait for
+        // wake / network restore to recycle (D14 + network-drop recovery).
+        if isSleeping || expectedSleepDrops.contains(id) || networkDown || suspendedForNetwork.contains(id) {
             setState(id, .reconnecting)
             return
         }
@@ -251,11 +260,12 @@ final class TunnelManager: ObservableObject {
             return
         }
 
+        let cap = settings.maxReconnectAttempts
         let attempts = (reconnectAttempts[id] ?? 0) + 1
         reconnectAttempts[id] = attempts
-        if attempts > maxReconnectAttempts {
+        if attempts > cap {
             let detail = (lastOutput[id]?.split(separator: "\n").last).map { " Last: \($0)" } ?? ""
-            setState(id, .failed("Stopped after \(maxReconnectAttempts) failed reconnects.\(detail)"))
+            setState(id, .failed("Stopped after \(cap) failed reconnects.\(detail)"))
             return
         }
         scheduleReconnect(id: id, delay: settings.reconnectDelay)
@@ -277,6 +287,57 @@ final class TunnelManager: ObservableObject {
         reconnectWork[id] = nil
     }
 
+    // MARK: - Port reclamation (network-drop recovery: own stale vs foreign orphan)
+
+    /// Make `port` free before spawning. Returns true to proceed; false means a
+    /// foreign process holds it (state already set to `.failed`).
+    private func reclaimPort(id: UUID, port: Int) async -> Bool {
+        // 1. Our own tracked process for this connection (e.g. wedged after a
+        //    network drop, process never exited): tear it down and reuse the port.
+        if let process = processes[id] {
+            processes[id] = nil
+            spawnedPgids[id] = nil
+            await Task.detached { process.terminateGroupBlocking(timeout: 2.0) }.value
+            _ = await Task.detached { PortProbe.waitUntilFree(port: port, timeout: 2.0) }.value
+            return true
+        }
+
+        let occupied = await Task.detached { PortProbe.isListening(port: port) }.value
+        guard occupied else { return true }
+
+        let holder = await Task.detached { PortProbe.holdingPID(port: port) }.value
+
+        // 2. Untracked, but the holder is in a process group WE spawned for this
+        //    connection → still ours; kill the group and reuse the port.
+        if let holder, let pgid = spawnedPgids[id],
+           getpgid(pid_t(holder)) == pgid {
+            spawnedPgids[id] = nil
+            await Task.detached { _ = kill(-pgid, SIGKILL) }.value
+            _ = await Task.detached { PortProbe.waitUntilFree(port: port, timeout: 2.0) }.value
+            return true
+        }
+
+        // 3. A foreign process holds the port. If the user opted in, kill it and
+        //    reuse the port; otherwise surface the orphan message.
+        if settings.killOrphanOnPort, let holder {
+            let pid = pid_t(holder)
+            let freed = await Task.detached { () -> Bool in
+                _ = kill(pid, SIGTERM)
+                if PortProbe.waitUntilFree(port: port, timeout: 1.5) { return true }
+                _ = kill(pid, SIGKILL)
+                return PortProbe.waitUntilFree(port: port, timeout: 1.5)
+            }.value
+            if freed {
+                NSLog("[tunnel %@] killed process %d holding port %d (killOrphanOnPort)", id.uuidString.prefix(8) as CVarArg, holder, port)
+                return true
+            }
+        }
+
+        let pidText = holder.map { " (PID \($0))" } ?? ""
+        setState(id, .failed("Local port \(port) in use\(pidText) — possibly an orphaned tunnel from a previous session."))
+        return false
+    }
+
     // MARK: - Sleep / wake (D14)
 
     private func registerSleepWakeObservers() {
@@ -296,16 +357,51 @@ final class TunnelManager: ObservableObject {
         expectedSleepDrops.removeAll()
         guard !toReconnect.isEmpty else { return }
 
-        // Creds may have expired during sleep — drop cached warmers so the first
-        // staggered reconnect re-warms once; the rest await it (D14).
-        credentialWarmers.removeAll()
+        recycle(ids: toReconnect)
+    }
 
-        // Stagger with per-tunnel jitter to avoid a thundering herd / dialog pileup.
+    // MARK: - Network monitoring (network-drop recovery)
+
+    private func startNetworkMonitor() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            let satisfied = path.status == .satisfied
+            Task { @MainActor in self?.handleNetwork(satisfied: satisfied) }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "tunnelmanager.network", qos: .utility))
+    }
+
+    private func handleNetwork(satisfied: Bool) {
+        if !satisfied {
+            // Network lost: suspend wanted tunnels (their processes are likely
+            // wedged but still holding the port). Don't retry / burn the cap now.
+            guard !networkDown else { return }
+            networkDown = true
+            for (id, want) in intent where want {
+                suspendedForNetwork.insert(id)
+                cancelReconnect(id: id)
+                setState(id, .reconnecting)
+            }
+        } else {
+            // Network restored: recycle the suspended tunnels (kill wedged process,
+            // free the port, restart). start() reclaims the port (D4/D5).
+            guard networkDown else { return }
+            networkDown = false
+            let toRecycle = suspendedForNetwork.filter { intent[$0] == true }
+            suspendedForNetwork.removeAll()
+            guard !toRecycle.isEmpty else { return }
+            recycle(ids: toRecycle)
+        }
+    }
+
+    /// Staggered, credential-warmed restart of a set of connections (used by both
+    /// wake and network-restore). Each start reclaims its port first.
+    private func recycle(ids: Set<UUID>) {
+        credentialWarmers.removeAll()   // creds may have expired during the outage
         var offset = 0.0
-        for id in toReconnect {
+        for id in ids {
             guard let connection = store.connection(id: id) else { continue }
             reconnectAttempts[id] = 0
-            let jitter = Double(abs(id.hashValue) % 1000) / 1000.0  // 0–1s deterministic jitter
+            let jitter = Double(abs(id.hashValue) % 1000) / 1000.0  // 0–1s deterministic
             let delay = settings.reconnectDelay + offset + jitter
             setState(id, .reconnecting)
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
@@ -343,6 +439,7 @@ final class TunnelManager: ObservableObject {
             process.terminateGroup()
         }
         processes[id] = nil
+        spawnedPgids[id] = nil
     }
 
     /// Quit path (D1/D2): cancel everything that could respawn a tunnel and hand

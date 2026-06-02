@@ -44,7 +44,20 @@ struct SettingsView: View {
                 }
 
                 Toggle("Auto-reconnect dropped tunnels", isOn: $settings.autoReconnect)
+
+                Stepper(value: $settings.maxReconnectAttempts, in: 1...20) {
+                    Text("Max reconnect attempts: \(settings.maxReconnectAttempts)")
+                }
+                .disabled(!settings.autoReconnect)
+
                 Toggle("Launch at login", isOn: $settings.launchAtLogin)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Toggle("Kill process occupying the local port", isOn: $settings.killOrphanOnPort)
+                    Text("When on, a process already bound to a connection's local port is terminated before connecting, instead of showing an in-use error.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
 
                 group("Binary Directory Override") {
                     TextField("/opt/homebrew/bin", text: $settings.binaryDirectoryOverride)

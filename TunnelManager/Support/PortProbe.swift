@@ -51,6 +51,17 @@ enum PortProbe {
         return isListening(port: port)
     }
 
+    /// Poll until the port is no longer listening (after a teardown) or timeout.
+    /// Returns true if the port became free. Call from a background context.
+    static func waitUntilFree(port: Int, timeout: TimeInterval, pollInterval: TimeInterval = 0.1) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if !isListening(port: port) { return true }
+            Thread.sleep(forTimeInterval: pollInterval)
+        }
+        return !isListening(port: port)
+    }
+
     /// PID holding a local port, via `lsof` (orphan reporting, D18). Best-effort.
     static func holdingPID(port: Int) -> Int? {
         let lsof = "/usr/sbin/lsof"
