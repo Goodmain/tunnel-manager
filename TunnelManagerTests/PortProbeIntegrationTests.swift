@@ -54,6 +54,17 @@ final class PortProbeIntegrationTests: XCTestCase {
         XCTAssertTrue(PortProbe.waitUntilListening(port: port, timeout: 2))
     }
 
+    func testWaitUntilFree() {
+        guard let (fd, port) = openListener() else {
+            return XCTFail("could not open listener")
+        }
+        // Listening → not free within the timeout.
+        XCTAssertFalse(PortProbe.waitUntilFree(port: port, timeout: 0.5))
+        close(fd)
+        // Closed → becomes free.
+        XCTAssertTrue(PortProbe.waitUntilFree(port: port, timeout: 2.0))
+    }
+
     func testUnboundPortNotDetected() {
         // Get a port the OS just assigned, then close it so nothing listens there.
         guard let (fd, port) = openListener() else {
