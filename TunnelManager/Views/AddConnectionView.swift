@@ -98,6 +98,15 @@ struct AddConnectionView: View {
         return options
     }
 
+    /// Coerces an empty stored value to the first option so the Picker selection
+    /// always matches a row (avoids the "selection is invalid" warning, D1).
+    private var profileSelection: Binding<String> {
+        Binding(
+            get: { awsProfile.isEmpty ? (profileOptions.first ?? "") : awsProfile },
+            set: { awsProfile = $0 }
+        )
+    }
+
     @ViewBuilder
     private var profileField: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -107,7 +116,7 @@ struct AddConnectionView: View {
                 TextField("my-profile", text: $awsProfile)
                     .textFieldStyle(.roundedBorder)
             } else {
-                Picker("", selection: $awsProfile) {
+                Picker("", selection: profileSelection) {
                     ForEach(profileOptions, id: \.self) { profile in
                         Text(profile).tag(profile)
                     }
