@@ -5,10 +5,16 @@ import Darwin
 /// (D7), and orphan detection (D18).
 enum PortProbe {
     /// True if something is accepting TCP connections on 127.0.0.1:port right now.
-    static func isListening(port: Int) -> Bool {
+    /// Uses a non-blocking connect with a bounded timeout so a wedged/filtered
+    /// port can never hang the readiness probe loop (D10).
+    static func isListening(port: Int, timeout: TimeInterval = 0.5) -> Bool {
         let fd = socket(AF_INET, SOCK_STREAM, 0)
         guard fd >= 0 else { return false }
         defer { close(fd) }
+
+        // Non-blocking so connect returns immediately with EINPROGRESS.
+        let flags = fcntl(fd, F_GETFL, 0)
+        _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
 
         var addr = sockaddr_in()
         addr.sin_family = sa_family_t(AF_INET)
@@ -20,7 +26,18 @@ enum PortProbe {
                 Darwin.connect(fd, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        return result == 0
+        if result == 0 { return true }            // connected immediately
+        if errno != EINPROGRESS { return false }  // refused / unreachable
+
+        // Wait (bounded) for the connect to complete, then check SO_ERROR.
+        var pfd = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
+        let ms = Int32(max(1, timeout * 1000))
+        guard poll(&pfd, 1, ms) > 0 else { return false }  // timed out / error
+
+        var soError: Int32 = 0
+        var len = socklen_t(MemoryLayout<Int32>.size)
+        guard getsockopt(fd, SOL_SOCKET, SO_ERROR, &soError, &len) == 0 else { return false }
+        return soError == 0
     }
 
     /// Poll until the port is listening or the timeout elapses (readiness gate, D10).

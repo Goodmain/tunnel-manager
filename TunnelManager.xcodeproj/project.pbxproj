@@ -1,8 +1,7 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	classes = {
-	};
+	classes = {};
 	objectVersion = 56;
 	objects = {
 
@@ -24,9 +23,28 @@
 		AB000000000000000000001E /* ConnectionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000001D /* ConnectionRowView.swift */; };
 		AB0000000000000000000020 /* AddConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000001F /* AddConnectionView.swift */; };
 		AB0000000000000000000022 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000021 /* SettingsView.swift */; };
+		AB0000000000000000000026 /* AWSConfigReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000025 /* AWSConfigReaderTests.swift */; };
+		AB0000000000000000000028 /* ConnectionStoreValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000027 /* ConnectionStoreValidationTests.swift */; };
+		AB000000000000000000002A /* ECSResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000029 /* ECSResolverTests.swift */; };
+		AB000000000000000000002C /* ConnectionModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000002B /* ConnectionModelTests.swift */; };
+		AB000000000000000000002E /* TunnelStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000002D /* TunnelStateTests.swift */; };
+		AB0000000000000000000030 /* SpawnedProcessIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000002F /* SpawnedProcessIntegrationTests.swift */; };
+		AB0000000000000000000032 /* PortProbeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000031 /* PortProbeIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AB000000000000000000004F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB000000000000000000003E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB000000000000000000003C;
+			remoteInfo = TunnelManager;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		AB0000000000000000000033 /* TunnelManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TunnelManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0000000000000000000034 /* TunnelManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TunnelManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB0000000000000000000001 /* TunnelManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManagerApp.swift; sourceTree = "<group>"; };
 		AB0000000000000000000003 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB0000000000000000000005 /* TunnelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManager.swift; sourceTree = "<group>"; };
@@ -46,11 +64,24 @@
 		AB0000000000000000000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AB0000000000000000000023 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB0000000000000000000024 /* TunnelManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TunnelManager.entitlements; sourceTree = "<group>"; };
-		AB0000000000000000000025 /* TunnelManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TunnelManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0000000000000000000025 /* AWSConfigReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSConfigReaderTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000027 /* ConnectionStoreValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStoreValidationTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000029 /* ECSResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECSResolverTests.swift; sourceTree = "<group>"; };
+		AB000000000000000000002B /* ConnectionModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModelTests.swift; sourceTree = "<group>"; };
+		AB000000000000000000002D /* TunnelStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStateTests.swift; sourceTree = "<group>"; };
+		AB000000000000000000002F /* SpawnedProcessIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnedProcessIntegrationTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000031 /* PortProbeIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortProbeIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AB000000000000000000002F /* Frameworks */ = {
+		AB0000000000000000000040 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000043 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -60,15 +91,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AB0000000000000000000026 = {
+		AB0000000000000000000035 = {
 			isa = PBXGroup;
 			children = (
-				AB0000000000000000000027 /* TunnelManager */,
-				AB000000000000000000002B /* Products */,
+				AB0000000000000000000036 /* TunnelManager */,
+				AB000000000000000000003B /* TunnelManagerTests */,
+				AB000000000000000000003A /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000027 /* TunnelManager */ = {
+		AB000000000000000000003A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB0000000000000000000033 /* TunnelManager.app */,
+				AB0000000000000000000034 /* TunnelManagerTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000036 /* TunnelManager */ = {
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000001 /* TunnelManagerApp.swift */,
@@ -76,25 +117,27 @@
 				AB0000000000000000000005 /* TunnelManager.swift */,
 				AB0000000000000000000007 /* ConnectionStore.swift */,
 				AB0000000000000000000009 /* SettingsStore.swift */,
-				AB0000000000000000000028 /* Models */,
-				AB0000000000000000000029 /* Support */,
-				AB000000000000000000002A /* Views */,
+				AB0000000000000000000037 /* Models */,
+				AB0000000000000000000038 /* Support */,
+				AB0000000000000000000039 /* Views */,
 				AB0000000000000000000023 /* Info.plist */,
 				AB0000000000000000000024 /* TunnelManager.entitlements */,
 			);
+			name = TunnelManager;
 			path = TunnelManager;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000028 /* Models */ = {
+		AB0000000000000000000037 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000000B /* Connection.swift */,
 				AB000000000000000000000D /* TunnelState.swift */,
 			);
+			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000029 /* Support */ = {
+		AB0000000000000000000038 /* Support */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000000F /* PathResolver.swift */,
@@ -104,10 +147,11 @@
 				AB0000000000000000000017 /* ECSResolver.swift */,
 				AB0000000000000000000019 /* AWSConfigReader.swift */,
 			);
+			name = Support;
 			path = Support;
 			sourceTree = "<group>";
 		};
-		AB000000000000000000002A /* Views */ = {
+		AB0000000000000000000039 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000001B /* PopoverView.swift */,
@@ -115,27 +159,35 @@
 				AB000000000000000000001F /* AddConnectionView.swift */,
 				AB0000000000000000000021 /* SettingsView.swift */,
 			);
+			name = Views;
 			path = Views;
 			sourceTree = "<group>";
 		};
-		AB000000000000000000002B /* Products */ = {
+		AB000000000000000000003B /* TunnelManagerTests */ = {
 			isa = PBXGroup;
 			children = (
-				AB0000000000000000000025 /* TunnelManager.app */,
+				AB0000000000000000000025 /* AWSConfigReaderTests.swift */,
+				AB0000000000000000000027 /* ConnectionStoreValidationTests.swift */,
+				AB0000000000000000000029 /* ECSResolverTests.swift */,
+				AB000000000000000000002B /* ConnectionModelTests.swift */,
+				AB000000000000000000002D /* TunnelStateTests.swift */,
+				AB000000000000000000002F /* SpawnedProcessIntegrationTests.swift */,
+				AB0000000000000000000031 /* PortProbeIntegrationTests.swift */,
 			);
-			name = Products;
+			name = TunnelManagerTests;
+			path = TunnelManagerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AB000000000000000000002C /* TunnelManager */ = {
+		AB000000000000000000003C /* TunnelManager */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AB0000000000000000000032 /* Build configuration list for PBXNativeTarget "TunnelManager" */;
+			buildConfigurationList = AB0000000000000000000046 /* Build configuration list for PBXNativeTarget */;
 			buildPhases = (
-				AB000000000000000000002E /* Sources */,
-				AB000000000000000000002F /* Frameworks */,
-				AB0000000000000000000030 /* Resources */,
+				AB000000000000000000003F /* Sources */,
+				AB0000000000000000000040 /* Frameworks */,
+				AB0000000000000000000041 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -143,25 +195,42 @@
 			);
 			name = TunnelManager;
 			productName = TunnelManager;
-			productReference = AB0000000000000000000025 /* TunnelManager.app */;
+			productReference = AB0000000000000000000033 /* TunnelManager.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AB000000000000000000003D /* TunnelManagerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB0000000000000000000047 /* Build configuration list for PBXNativeTarget */;
+			buildPhases = (
+				AB0000000000000000000042 /* Sources */,
+				AB0000000000000000000043 /* Frameworks */,
+				AB0000000000000000000044 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB000000000000000000004E /* PBXTargetDependency */,
+			);
+			name = TunnelManagerTests;
+			productName = TunnelManagerTests;
+			productReference = AB0000000000000000000034 /* TunnelManagerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		AB000000000000000000002D /* Project object */ = {
+		AB000000000000000000003E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 2650;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					AB000000000000000000002C = {
-						CreatedOnToolsVersion = 15.0;
-					};
+					AB000000000000000000003C = { CreatedOnToolsVersion = 15.0; };
+					AB000000000000000000003D = { CreatedOnToolsVersion = 15.0; TestTargetID = AB000000000000000000003C; };
 				};
 			};
-			buildConfigurationList = AB0000000000000000000031 /* Build configuration list for PBXProject "TunnelManager" */;
+			buildConfigurationList = AB0000000000000000000045 /* Build configuration list for PBXProject */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -169,18 +238,26 @@
 				en,
 				Base,
 			);
-			mainGroup = AB0000000000000000000026;
-			productRefGroup = AB000000000000000000002B /* Products */;
+			mainGroup = AB0000000000000000000035;
+			productRefGroup = AB000000000000000000003A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AB000000000000000000002C /* TunnelManager */,
+				AB000000000000000000003C /* TunnelManager */,
+				AB000000000000000000003D /* TunnelManagerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AB0000000000000000000030 /* Resources */ = {
+		AB0000000000000000000041 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000044 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -190,7 +267,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AB000000000000000000002E /* Sources */ = {
+		AB000000000000000000003F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -214,107 +291,75 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB0000000000000000000042 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB0000000000000000000026 /* AWSConfigReaderTests.swift in Sources */,
+				AB0000000000000000000028 /* ConnectionStoreValidationTests.swift in Sources */,
+				AB000000000000000000002A /* ECSResolverTests.swift in Sources */,
+				AB000000000000000000002C /* ConnectionModelTests.swift in Sources */,
+				AB000000000000000000002E /* TunnelStateTests.swift in Sources */,
+				AB0000000000000000000030 /* SpawnedProcessIntegrationTests.swift in Sources */,
+				AB0000000000000000000032 /* PortProbeIntegrationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		AB000000000000000000004E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB000000000000000000003C /* TunnelManager */;
+			targetProxy = AB000000000000000000004F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		AB0000000000000000000033 /* Debug */ = {
+		AB0000000000000000000048 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		AB0000000000000000000034 /* Release */ = {
+		AB0000000000000000000049 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
 		};
-		AB0000000000000000000035 /* Debug */ = {
+		AB000000000000000000004A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
@@ -322,7 +367,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TunnelManager/Info.plist;
@@ -337,7 +381,7 @@
 			};
 			name = Debug;
 		};
-		AB0000000000000000000036 /* Release */ = {
+		AB000000000000000000004B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
@@ -345,7 +389,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TunnelManager/Info.plist;
@@ -357,31 +400,80 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pmg.TunnelManager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		AB000000000000000000004C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pmg.TunnelManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TunnelManager.app/Contents/MacOS/TunnelManager";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+			};
+			name = Debug;
+		};
+		AB000000000000000000004D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pmg.TunnelManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TunnelManager.app/Contents/MacOS/TunnelManager";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AB0000000000000000000031 /* Build configuration list for PBXProject "TunnelManager" */ = {
+		AB0000000000000000000045 /* Build configuration list for PBXProject */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AB0000000000000000000033 /* Debug */,
-				AB0000000000000000000034 /* Release */,
+				AB0000000000000000000048 /* Debug */,
+				AB0000000000000000000049 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AB0000000000000000000032 /* Build configuration list for PBXNativeTarget "TunnelManager" */ = {
+		AB0000000000000000000046 /* Build configuration list for PBXNativeTarget */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AB0000000000000000000035 /* Debug */,
-				AB0000000000000000000036 /* Release */,
+				AB000000000000000000004A /* Debug */,
+				AB000000000000000000004B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB0000000000000000000047 /* Build configuration list for PBXNativeTarget */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB000000000000000000004C /* Debug */,
+				AB000000000000000000004D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = AB000000000000000000002D /* Project object */;
+	rootObject = AB000000000000000000003E /* Project object */;
 }

@@ -78,7 +78,7 @@ struct ECSResolver {
 
     private struct ListTasksResponse: Decodable { let taskArns: [String] }
 
-    private static func parseTaskArns(_ json: String) throws -> [String] {
+    static func parseTaskArns(_ json: String) throws -> [String] {
         guard let data = json.data(using: .utf8) else { throw ResolveError.parseError("empty list-tasks output") }
         do {
             return try JSONDecoder().decode(ListTasksResponse.self, from: data).taskArns
@@ -102,7 +102,7 @@ struct ECSResolver {
     /// Returns (taskId, containerName, runtimeId). Container selection (D6): the
     /// one exposing remotePort isn't in this payload, so pick first with a
     /// runtimeId; fall back to first container.
-    private static func parseTarget(_ json: String, remotePort: Int) throws -> (String, String, String) {
+    static func parseTarget(_ json: String, remotePort: Int) throws -> (String, String, String) {
         guard let data = json.data(using: .utf8) else { throw ResolveError.parseError("empty describe-tasks output") }
         let decoded: DescribeTasksResponse
         do {
