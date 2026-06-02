@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Xcode — user-specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+*.xcscmblueprint
+*.xccheckout
+
+# Xcode — build output
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Swift compiler / playgrounds
+*.swiftmodule
+timeline.xctimeline
+playground.xcworkspace
+
+# CocoaPods / Carthage (unused, but ignore if added)
+Pods/
+Carthage/Build/
+
+# Local build artifacts from headless swiftc
+*.o
+TunnelManager.app/
