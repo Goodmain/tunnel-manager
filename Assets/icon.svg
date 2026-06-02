@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- macOS squircle background, dark (matches the menu-bar glyph style) -->
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="#1C1C1E"/>
+
+  <!-- Three-dot hub / network mark, centered, white.
+       Three outer nodes in a triangle, each joined to a center node. -->
+  <g stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" fill="#FFFFFF">
+    <!-- connectors: center -> each node -->
+    <line x1="512" y1="512" x2="512" y2="320"/>
+    <line x1="512" y1="512" x2="346" y2="608"/>
+    <line x1="512" y1="512" x2="678" y2="608"/>
+  </g>
+  <g fill="#FFFFFF">
+    <!-- outer nodes -->
+    <circle cx="512" cy="320" r="58"/>
+    <circle cx="346" cy="608" r="58"/>
+    <circle cx="678" cy="608" r="58"/>
+    <!-- center hub -->
+    <circle cx="512" cy="512" r="48"/>
+  </g>
+</svg>

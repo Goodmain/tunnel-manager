@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Menu-bar glyph: the three-dot hub mark only (no squircle background),
+     black on transparent so it works as a template image (macOS tints it for
+     light/dark and the active green state). Fills the viewBox so it matches the
+     visual weight of other menu-bar icons. -->
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#000000" stroke-width="9" stroke-linecap="round" fill="#000000">
+    <line x1="50" y1="48" x2="50" y2="15"/>
+    <line x1="50" y1="48" x2="17" y2="72"/>
+    <line x1="50" y1="48" x2="83" y2="72"/>
+  </g>
+  <g fill="#000000">
+    <circle cx="50" cy="15" r="14"/>
+    <circle cx="17" cy="72" r="14"/>
+    <circle cx="83" cy="72" r="14"/>
+    <circle cx="50" cy="48" r="11"/>
+  </g>
+</svg>

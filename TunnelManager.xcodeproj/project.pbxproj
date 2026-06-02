@@ -30,12 +30,13 @@
 		AB000000000000000000002E /* TunnelStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000002D /* TunnelStateTests.swift */; };
 		AB0000000000000000000030 /* SpawnedProcessIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000002F /* SpawnedProcessIntegrationTests.swift */; };
 		AB0000000000000000000032 /* PortProbeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000031 /* PortProbeIntegrationTests.swift */; };
+		AB0000000000000000000036 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000035 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		AB000000000000000000004D /* PBXContainerItemProxy */ = {
+		AB000000000000000000004F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB000000000000000000003C /* Project object */;
+			containerPortal = AB000000000000000000003E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AB0000000000000000000100;
 			remoteInfo = TunnelManager;
@@ -64,6 +65,7 @@
 		AB0000000000000000000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AB0000000000000000000023 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB0000000000000000000024 /* TunnelManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TunnelManager.entitlements; sourceTree = "<group>"; };
+		AB0000000000000000000035 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB0000000000000000000025 /* AWSConfigReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSConfigReaderTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000027 /* ConnectionStoreValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStoreValidationTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000029 /* ECSResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECSResolverTests.swift; sourceTree = "<group>"; };
@@ -74,14 +76,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AB000000000000000000003E /* Frameworks */ = {
+		AB0000000000000000000040 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB0000000000000000000041 /* Frameworks */ = {
+		AB0000000000000000000043 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -91,16 +93,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AB0000000000000000000035 = {
+		AB0000000000000000000037 = {
 			isa = PBXGroup;
 			children = (
-				AB0000000000000000000036 /* TunnelManager */,
-				AB000000000000000000003B /* TunnelManagerTests */,
-				AB000000000000000000003A /* Products */,
+				AB0000000000000000000038 /* TunnelManager */,
+				AB000000000000000000003D /* TunnelManagerTests */,
+				AB000000000000000000003C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		AB000000000000000000003A /* Products */ = {
+		AB000000000000000000003C /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000033 /* TunnelManager.app */,
@@ -109,7 +111,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000036 /* TunnelManager */ = {
+		AB0000000000000000000038 /* TunnelManager */ = {
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000001 /* TunnelManagerApp.swift */,
@@ -117,9 +119,10 @@
 				AB0000000000000000000005 /* TunnelManager.swift */,
 				AB0000000000000000000007 /* ConnectionStore.swift */,
 				AB0000000000000000000009 /* SettingsStore.swift */,
-				AB0000000000000000000037 /* Models */,
-				AB0000000000000000000038 /* Support */,
-				AB0000000000000000000039 /* Views */,
+				AB0000000000000000000039 /* Models */,
+				AB000000000000000000003A /* Support */,
+				AB000000000000000000003B /* Views */,
+				AB0000000000000000000035 /* Assets.xcassets */,
 				AB0000000000000000000023 /* Info.plist */,
 				AB0000000000000000000024 /* TunnelManager.entitlements */,
 			);
@@ -127,7 +130,7 @@
 			path = TunnelManager;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000037 /* Models */ = {
+		AB0000000000000000000039 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000000B /* Connection.swift */,
@@ -137,7 +140,7 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000038 /* Support */ = {
+		AB000000000000000000003A /* Support */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000000F /* PathResolver.swift */,
@@ -151,7 +154,7 @@
 			path = Support;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000039 /* Views */ = {
+		AB000000000000000000003B /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				AB000000000000000000001B /* PopoverView.swift */,
@@ -163,7 +166,7 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		AB000000000000000000003B /* TunnelManagerTests */ = {
+		AB000000000000000000003D /* TunnelManagerTests */ = {
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000025 /* AWSConfigReaderTests.swift */,
@@ -183,11 +186,11 @@
 /* Begin PBXNativeTarget section */
 		AB0000000000000000000100 /* TunnelManager */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AB0000000000000000000044 /* Build configuration list for PBXNativeTarget */;
+			buildConfigurationList = AB0000000000000000000046 /* Build configuration list for PBXNativeTarget */;
 			buildPhases = (
-				AB000000000000000000003D /* Sources */,
-				AB000000000000000000003E /* Frameworks */,
-				AB000000000000000000003F /* Resources */,
+				AB000000000000000000003F /* Sources */,
+				AB0000000000000000000040 /* Frameworks */,
+				AB0000000000000000000041 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -200,16 +203,16 @@
 		};
 		AB0000000000000000000200 /* TunnelManagerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AB0000000000000000000045 /* Build configuration list for PBXNativeTarget */;
+			buildConfigurationList = AB0000000000000000000047 /* Build configuration list for PBXNativeTarget */;
 			buildPhases = (
-				AB0000000000000000000040 /* Sources */,
-				AB0000000000000000000041 /* Frameworks */,
-				AB0000000000000000000042 /* Resources */,
+				AB0000000000000000000042 /* Sources */,
+				AB0000000000000000000043 /* Frameworks */,
+				AB0000000000000000000044 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				AB000000000000000000004C /* PBXTargetDependency */,
+				AB000000000000000000004E /* PBXTargetDependency */,
 			);
 			name = TunnelManagerTests;
 			productName = TunnelManagerTests;
@@ -219,7 +222,7 @@
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		AB000000000000000000003C /* Project object */ = {
+		AB000000000000000000003E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
@@ -230,7 +233,7 @@
 					AB0000000000000000000200 = { CreatedOnToolsVersion = 15.0; TestTargetID = AB0000000000000000000100; };
 				};
 			};
-			buildConfigurationList = AB0000000000000000000043 /* Build configuration list for PBXProject */;
+			buildConfigurationList = AB0000000000000000000045 /* Build configuration list for PBXProject */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -238,8 +241,8 @@
 				en,
 				Base,
 			);
-			mainGroup = AB0000000000000000000035;
-			productRefGroup = AB000000000000000000003A /* Products */;
+			mainGroup = AB0000000000000000000037;
+			productRefGroup = AB000000000000000000003C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -250,14 +253,15 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AB000000000000000000003F /* Resources */ = {
+		AB0000000000000000000041 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB0000000000000000000036 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB0000000000000000000042 /* Resources */ = {
+		AB0000000000000000000044 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -267,7 +271,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AB000000000000000000003D /* Sources */ = {
+		AB000000000000000000003F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -291,7 +295,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB0000000000000000000040 /* Sources */ = {
+		AB0000000000000000000042 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -308,15 +312,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		AB000000000000000000004C /* PBXTargetDependency */ = {
+		AB000000000000000000004E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = AB0000000000000000000100 /* TunnelManager */;
-			targetProxy = AB000000000000000000004D /* PBXContainerItemProxy */;
+			targetProxy = AB000000000000000000004F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		AB0000000000000000000046 /* Debug */ = {
+		AB0000000000000000000048 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -339,7 +343,7 @@
 			};
 			name = Debug;
 		};
-		AB0000000000000000000047 /* Release */ = {
+		AB0000000000000000000049 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -359,9 +363,10 @@
 			};
 			name = Release;
 		};
-		AB0000000000000000000048 /* Debug */ = {
+		AB000000000000000000004A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
 				CODE_SIGN_ENTITLEMENTS = TunnelManager/TunnelManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -381,9 +386,10 @@
 			};
 			name = Debug;
 		};
-		AB0000000000000000000049 /* Release */ = {
+		AB000000000000000000004B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
 				CODE_SIGN_ENTITLEMENTS = TunnelManager/TunnelManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -403,7 +409,7 @@
 			};
 			name = Release;
 		};
-		AB000000000000000000004A /* Debug */ = {
+		AB000000000000000000004C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -423,7 +429,7 @@
 			};
 			name = Debug;
 		};
-		AB000000000000000000004B /* Release */ = {
+		AB000000000000000000004D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -446,16 +452,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AB0000000000000000000043 /* Build configuration list for PBXProject */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AB0000000000000000000046 /* Debug */,
-				AB0000000000000000000047 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		AB0000000000000000000044 /* Build configuration list for PBXNativeTarget */ = {
+		AB0000000000000000000045 /* Build configuration list for PBXProject */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AB0000000000000000000048 /* Debug */,
@@ -464,7 +461,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AB0000000000000000000045 /* Build configuration list for PBXNativeTarget */ = {
+		AB0000000000000000000046 /* Build configuration list for PBXNativeTarget */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AB000000000000000000004A /* Debug */,
@@ -473,7 +470,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		AB0000000000000000000047 /* Build configuration list for PBXNativeTarget */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB000000000000000000004C /* Debug */,
+				AB000000000000000000004D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 	};
-	rootObject = AB000000000000000000003C /* Project object */;
+	rootObject = AB000000000000000000003E /* Project object */;
 }
