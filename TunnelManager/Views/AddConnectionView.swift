@@ -1,0 +1,115 @@
+import SwiftUI
+
+/// "+ New" tab — a form covering every connection field with validation
+/// (menu-bar-presentation + connection-management specs).
+struct AddConnectionView: View {
+    /// When set, the form edits this connection instead of creating a new one (D15).
+    var editing: Connection?
+    /// Called after a successful save (e.g. to switch back to the Connections tab).
+    var onSaved: () -> Void = {}
+
+    @EnvironmentObject private var store: ConnectionStore
+    @EnvironmentObject private var settings: SettingsStore
+    @EnvironmentObject private var tunnels: TunnelManager
+
+    @State private var name = ""
+    @State private var awsProfile = ""
+    @State private var ecsCluster = ""
+    @State private var dbHost = ""
+    @State private var remotePort = "5432"
+    @State private var localPort = "5432"
+    @State private var environment: DeploymentEnvironment = .dev
+
+    @State private var errorMessage: String?
+    @State private var warningMessage: String?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                field("Name", text: $name, placeholder: "Prod DB")
+                field("AWS Profile", text: $awsProfile, placeholder: "my-profile")
+                field("ECS Cluster", text: $ecsCluster, placeholder: "my-cluster")
+                field("DB Host", text: $dbHost, placeholder: "db.internal.example.com")
+
+                HStack(spacing: 8) {
+                    field("Remote Port", text: $remotePort)
+                    field("Local Port", text: $localPort)
+                }
+
+                Picker("Environment", selection: $environment) {
+                    ForEach(DeploymentEnvironment.allCases) { env in
+                        Text(env.label).tag(env)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                if let warningMessage {
+                    Label(warningMessage, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                if let errorMessage {
+                    Label(errorMessage, systemImage: "xmark.octagon")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+
+                Button(action: save) {
+                    Text(editing == nil ? "Save" : "Update")
+                        .frame(maxWidth: .infinity)
+                }
+                .keyboardShortcut(.defaultAction)
+                .controlSize(.large)
+                .padding(.top, 4)
+            }
+            .padding(12)
+        }
+        .onAppear {
+            if let editing {
+                name = editing.name
+                awsProfile = editing.awsProfile
+                ecsCluster = editing.ecsCluster
+                dbHost = editing.dbHost
+                remotePort = String(editing.remotePort)
+                localPort = String(editing.localPort)
+                environment = editing.environment
+            } else if awsProfile.isEmpty {
+                awsProfile = settings.defaultAWSProfile
+            }
+        }
+    }
+
+    private func field(_ label: String, text: Binding<String>, placeholder: String = "") -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundColor(.secondary)
+            TextField(placeholder, text: text)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
+    private func save() {
+        errorMessage = nil
+        warningMessage = nil
+        guard let rPort = Int(remotePort), let lPort = Int(localPort) else {
+            errorMessage = "Ports must be numbers."
+            return
+        }
+        let connection = Connection(
+            id: editing?.id ?? UUID(),
+            name: name, awsProfile: awsProfile, ecsCluster: ecsCluster,
+            dbHost: dbHost, remotePort: rPort, localPort: lPort, environment: environment
+        )
+        do {
+            warningMessage = try store.validate(connection, isNew: editing == nil)
+            if let editing {
+                store.update(connection)
+                tunnels.handleEdit(old: editing, new: connection)  // restart live tunnel if needed (D15)
+            } else {
+                store.add(connection)
+            }
+            onSaved()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
