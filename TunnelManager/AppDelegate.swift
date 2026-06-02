@@ -43,30 +43,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.action = #selector(togglePopover)
         statusItem.button?.target = self
+        statusItem.button?.imageScaling = .scaleProportionallyDown
         updateIcon(activeCount: 0)
         NSLog("[TunnelManager] status item created, button=%@", statusItem.button != nil ? "yes" : "nil")
     }
 
-    /// Active = non-template green image; inactive = template (adapts to light/dark) (D19).
+    /// Custom three-dot glyph (template) from the asset catalog; tinted green when
+    /// any tunnel is active. Template images accept `contentTintColor`, so one
+    /// image covers both states (D19).
     private func updateIcon(activeCount: Int) {
         guard let button = statusItem.button else { return }
-        let symbolName = activeCount > 0 ? "point.3.filled.connected.trianglepath.dotted" : "point.3.connected.trianglepath.dotted"
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Tunnel Manager")
+        // Prefer the bundled StatusBarIcon; fall back to an SF Symbol, then text.
+        let base = NSImage(named: "StatusBarIcon")
+            ?? NSImage(systemSymbolName: "point.3.connected.trianglepath.dotted",
+                       accessibilityDescription: "Tunnel Manager")
+        base?.size = NSSize(width: 18, height: 18)
+
         if activeCount > 0 {
-            image?.isTemplate = false
-            button.contentTintColor = .systemGreen
+            // Status-bar buttons IGNORE contentTintColor for template images, so
+            // bake the green into a non-template image instead.
+            button.image = base.map { Self.tinted($0, with: .systemGreen) }
+            button.contentTintColor = nil
             button.title = " \(activeCount)"
         } else {
-            image?.isTemplate = true
+            base?.isTemplate = true   // adapts black/white to the menu bar
+            button.image = base
             button.contentTintColor = nil
             button.title = ""
         }
-        button.image = image
-        // Fallback so the item is never zero-width/invisible even if the symbol fails to load.
-        if image == nil && button.title.isEmpty {
-            button.title = "TM"
+        if button.image == nil && button.title.isEmpty {
+            button.title = "TM"   // never zero-width/invisible
         }
         button.imagePosition = button.title.isEmpty ? .imageOnly : .imageLeading
+    }
+
+    /// Returns a non-template copy of `image` with every opaque pixel filled `color`.
+    /// Used for the active (green) status-bar glyph, since status-bar buttons drop
+    /// contentTintColor on template images.
+    private static func tinted(_ image: NSImage, with color: NSColor) -> NSImage {
+        let result = NSImage(size: image.size)
+        result.lockFocus()
+        image.draw(at: .zero, from: NSRect(origin: .zero, size: image.size),
+                   operation: .sourceOver, fraction: 1.0)
+        color.set()
+        NSRect(origin: .zero, size: image.size).fill(using: .sourceAtop)
+        result.unlockFocus()
+        result.isTemplate = false
+        return result
     }
 
     // MARK: - Popover

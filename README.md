@@ -24,6 +24,29 @@ run as their own process group, and dropped tunnels auto-reconnect.
 - Sleep/wake aware — staggered reconnects, single MFA prompt instead of a thundering herd.
 - Persists connections + settings to `UserDefaults` (no secrets stored).
 
+## Install
+
+Via Homebrew (recommended):
+
+```bash
+brew tap Goodmain/tunnel-manager
+brew install --cask tunnel-manager
+```
+
+This also installs the runtime tools the app needs (`aws-vault`, `awscli`, `session-manager-plugin`).
+
+Upgrade / uninstall:
+
+```bash
+brew upgrade --cask tunnel-manager
+brew uninstall --cask tunnel-manager
+```
+
+> The app is ad-hoc signed, not notarized (no paid Apple account). The cask clears the
+> download quarantine on install so it launches normally.
+
+To build from source instead, see [Build & run](#build--run).
+
 ## Requirements
 
 - macOS 13+
