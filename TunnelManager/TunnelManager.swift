@@ -345,12 +345,26 @@ final class TunnelManager: ObservableObject {
         processes[id] = nil
     }
 
-    /// Synchronous teardown of all tunnels for app quit (D2).
+    /// Quit path (D1/D2): cancel everything that could respawn a tunnel and hand
+    /// back the live processes so the caller can kill them (off-main, blocking).
+    /// Clears the process map so a follow-up `terminateAll()` is a no-op.
+    func prepareForQuit() -> [SpawnedProcess] {
+        for id in Array(intent.keys) { intent[id] = false }   // nothing is "wanted" anymore
+        reconnectWork.values.forEach { $0.cancel() }
+        reconnectWork.removeAll()
+        startTasks.values.forEach { $0.cancel() }
+        startTasks.removeAll()
+        let live = Array(processes.values)
+        processes.removeAll()
+        return live
+    }
+
+    /// Best-effort synchronous teardown, used as a fallback from
+    /// `applicationWillTerminate`. Idempotent after `prepareForQuit`.
     func terminateAll() {
-        for (_, process) in processes {
+        for process in prepareForQuit() {
             process.terminateGroupSync()
         }
-        processes.removeAll()
     }
 
     // MARK: - Helpers
