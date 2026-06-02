@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let connectionStore = ConnectionStore()
     private let settingsStore = SettingsStore()
+    private let profileStore = AWSProfileStore()
     private lazy var tunnelManager = TunnelManager(store: connectionStore, settings: settingsStore)
 
     private var cancellables = Set<AnyCancellable>()
@@ -20,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Menu bar agent: no Dock icon, lives as an accessory (also enforced by LSUIElement).
         NSApp.setActivationPolicy(.accessory)
         tunnelManager.configure()
+        profileStore.refresh()
         setupStatusItem()
         setupPopover()
 
@@ -76,6 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .environmentObject(connectionStore)
             .environmentObject(settingsStore)
             .environmentObject(tunnelManager)
+            .environmentObject(profileStore)
         popover.contentViewController = NSHostingController(rootView: root)
     }
 
@@ -84,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            profileStore.refresh()  // pick up profiles added since launch (D3)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }

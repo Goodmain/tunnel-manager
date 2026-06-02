@@ -28,11 +28,14 @@ final class ConnectionStore: ObservableObject {
     // MARK: - Validation
 
     enum ValidationError: LocalizedError {
+        case emptyField(field: String)
         case portOutOfRange(field: String)
         case duplicateLocalPort(Int)
 
         var errorDescription: String? {
             switch self {
+            case .emptyField(let field):
+                return "\(field) is required."
             case .portOutOfRange(let field):
                 return "\(field) must be between 1 and 65535."
             case .duplicateLocalPort(let port):
@@ -45,6 +48,17 @@ final class ConnectionStore: ObservableObject {
     /// Returns an optional non-blocking warning string (e.g. privileged port).
     @discardableResult
     func validate(_ connection: Connection, isNew: Bool) throws -> String? {
+        // Required fields must be non-empty (whitespace-only counts as empty).
+        let required: [(String, String)] = [
+            ("Name", connection.name),
+            ("AWS profile", connection.awsProfile),
+            ("ECS cluster", connection.ecsCluster),
+            ("DB host", connection.dbHost),
+        ]
+        for (label, value) in required
+        where value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw ValidationError.emptyField(field: label)
+        }
         guard (1...65535).contains(connection.remotePort) else {
             throw ValidationError.portOutOfRange(field: "Remote port")
         }

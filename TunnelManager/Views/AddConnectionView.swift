@@ -11,6 +11,7 @@ struct AddConnectionView: View {
     @EnvironmentObject private var store: ConnectionStore
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var tunnels: TunnelManager
+    @EnvironmentObject private var profiles: AWSProfileStore
 
     @State private var name = ""
     @State private var awsProfile = ""
@@ -27,7 +28,7 @@ struct AddConnectionView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 field("Name", text: $name, placeholder: "Prod DB")
-                field("AWS Profile", text: $awsProfile, placeholder: "my-profile")
+                profileField
                 field("ECS Cluster", text: $ecsCluster, placeholder: "my-cluster")
                 field("DB Host", text: $dbHost, placeholder: "db.internal.example.com")
 
@@ -74,7 +75,46 @@ struct AddConnectionView: View {
                 localPort = String(editing.localPort)
                 environment = editing.environment
             } else if awsProfile.isEmpty {
-                awsProfile = settings.defaultAWSProfile
+                // Prefer the configured default; otherwise the first discovered profile
+                // so the Picker has a valid selection (D5).
+                let list = profiles.profiles
+                if !settings.defaultAWSProfile.isEmpty {
+                    awsProfile = settings.defaultAWSProfile
+                } else if let first = list.first {
+                    awsProfile = first
+                }
+            }
+        }
+    }
+
+    /// Options shown in the profile picker: discovered profiles, plus the current
+    /// value if it isn't in the list (e.g. editing a connection whose profile was
+    /// removed from config) so it is never silently dropped (D4).
+    private var profileOptions: [String] {
+        var options = profiles.profiles
+        if !awsProfile.isEmpty && !options.contains(awsProfile) {
+            options.insert(awsProfile, at: 0)
+        }
+        return options
+    }
+
+    @ViewBuilder
+    private var profileField: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("AWS Profile").font(.caption).foregroundColor(.secondary)
+            if profiles.profiles.isEmpty {
+                // Fallback to free text when no profiles were discovered (D4).
+                TextField("my-profile", text: $awsProfile)
+                    .textFieldStyle(.roundedBorder)
+            } else {
+                Picker("", selection: $awsProfile) {
+                    ForEach(profileOptions, id: \.self) { profile in
+                        Text(profile).tag(profile)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

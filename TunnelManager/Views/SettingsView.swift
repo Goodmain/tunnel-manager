@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var tunnels: TunnelManager
+    @EnvironmentObject private var profiles: AWSProfileStore
 
     var body: some View {
         ScrollView {
@@ -17,8 +18,20 @@ struct SettingsView: View {
                 }
 
                 group("Default AWS Profile") {
-                    TextField("my-profile", text: $settings.defaultAWSProfile)
-                        .textFieldStyle(.roundedBorder)
+                    if profiles.profiles.isEmpty {
+                        TextField("my-profile", text: $settings.defaultAWSProfile)
+                            .textFieldStyle(.roundedBorder)
+                    } else {
+                        Picker("", selection: $settings.defaultAWSProfile) {
+                            Text("None").tag("")
+                            ForEach(defaultProfileOptions, id: \.self) { profile in
+                                Text(profile).tag(profile)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
 
                 group("Reconnect Delay") {
@@ -49,6 +62,17 @@ struct SettingsView: View {
             }
             .padding(12)
         }
+    }
+
+    /// Discovered profiles, plus the current default if it is no longer in config
+    /// so the saved value isn't silently dropped.
+    private var defaultProfileOptions: [String] {
+        var options = profiles.profiles
+        let current = settings.defaultAWSProfile
+        if !current.isEmpty && !options.contains(current) {
+            options.insert(current, at: 0)
+        }
+        return options
     }
 
     private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
