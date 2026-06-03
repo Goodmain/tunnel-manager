@@ -25,7 +25,10 @@ final class TunnelManager: ObservableObject {
     private var reconnectAttempts: [UUID: Int] = [:]
     private var reconnectWork: [UUID: DispatchWorkItem] = [:]
     private var lastOutput: [UUID: String] = [:]      // bounded ring buffer (D11)
-    private var credentialWarmers: [String: Task<Void, Never>] = [:]  // per-profile auth gate
+    /// Cached temp credentials per profile + the in-flight fetch, so concurrent
+    /// (re)connects share ONE aws-vault invocation → one prompt per profile.
+    private var cachedCreds: [String: VaultCredentials] = [:]
+    private var credFetch: [String: Task<VaultCredentials?, Never>] = [:]
 
     /// Connections whose drop is expected because the machine is sleeping (D14).
     private var expectedSleepDrops: Set<UUID> = []
@@ -42,6 +45,7 @@ final class TunnelManager: ObservableObject {
 
     private var cachedPath: String = ""
     private var awsVaultPath: String?
+    private var awsPath: String?
 
     private let readinessTimeout: TimeInterval = 45  // generous: covers slow MFA (D5/D10)
     private let outputBufferLimit = 8 * 1024
@@ -74,6 +78,7 @@ final class TunnelManager: ObservableObject {
                 guard let self else { return }
                 self.cachedPath = path
                 self.awsVaultPath = found.vault
+                self.awsPath = found.aws
                 var missing: [String] = []
                 if found.vault == nil { missing.append("aws-vault") }
                 if found.aws == nil { missing.append("aws") }
@@ -87,10 +92,21 @@ final class TunnelManager: ObservableObject {
         }
     }
 
-    private func childEnvironment() -> [String: String] {
+    /// Environment for the single aws-vault credential fetch (PATH + GUI prompt).
+    private func baseEnvironment() -> [String: String] {
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = cachedPath
-        env["AWS_VAULT_PROMPT"] = "osascript"  // GUI MFA prompt (D5)
+        env["AWS_VAULT_PROMPT"] = "osascript"  // GUI prompt, no TTY needed
+        return env
+    }
+
+    /// Environment for the tunnel/ECS `aws` commands: PATH + injected credentials
+    /// for `profile`, so they run without an aws-vault wrapper.
+    private func childEnvironment(for profile: String) -> [String: String] {
+        var env = baseEnvironment()
+        if let creds = cachedCreds[profile] {
+            for (k, v) in creds.environment { env[k] = v }
+        }
         return env
     }
 
@@ -139,15 +155,21 @@ final class TunnelManager: ObservableObject {
         guard await reclaimPort(id: id, port: port) else { return }  // sets .failed on foreign orphan
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
 
-        // Serialize credential acquisition per profile so concurrent starts trigger
-        // ONE MFA prompt, not one each. The first start warms creds; others await it.
-        await ensureCredentials(profile: connection.awsProfile, vault: vault)
+        // Fetch credentials ONCE per profile (one prompt), then run aws directly.
+        guard let _ = await credentials(for: connection.awsProfile, vault: vault) else {
+            setState(id, .failed("Could not obtain credentials from aws-vault for profile \(connection.awsProfile)."))
+            return
+        }
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
+        guard let aws = awsPath else {
+            setState(id, .failed("aws CLI not found. Check Settings."))
+            return
+        }
 
-        // Resolve ECS target fresh (D6).
-        let env = childEnvironment()
+        // Resolve ECS target fresh (D6), running `aws` with injected credentials.
+        let env = childEnvironment(for: connection.awsProfile)
         let ctx = ECSResolver.Context(
-            awsVaultPath: vault, environment: env, profile: connection.awsProfile,
+            awsPath: aws, environment: env,
             cluster: connection.ecsCluster, remotePort: connection.remotePort
         )
         let resolution: ECSResolver.Resolution
@@ -156,16 +178,16 @@ final class TunnelManager: ObservableObject {
                 try ECSResolver.resolve(ctx)
             }.value
         } catch {
+            invalidateCredentials(profile: connection.awsProfile)  // maybe expired; refetch next time
             setState(id, .failed(error.localizedDescription))
             return
         }
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
 
-        // Spawn the long-running tunnel (own process group, D2). Handlers wired
-        // in init so no early stderr is lost (the cause of the empty-output bug).
+        // Spawn the long-running tunnel (own process group, D2), aws directly.
         let args = ssmArguments(connection: connection, target: resolution.target)
         guard let process = SpawnedProcess(
-            executable: vault,
+            executable: aws,
             arguments: args,
             environment: env,
             onOutput: { [weak self] text in
@@ -175,7 +197,7 @@ final class TunnelManager: ObservableObject {
                 Task { @MainActor in self?.handleTermination(id: id, exitCode: code) }
             }
         ) else {
-            setState(id, .failed("Failed to launch aws-vault (posix_spawn failed)."))
+            setState(id, .failed("Failed to launch aws (posix_spawn failed)."))
             return
         }
         processes[id] = process
@@ -396,7 +418,7 @@ final class TunnelManager: ObservableObject {
     /// Staggered, credential-warmed restart of a set of connections (used by both
     /// wake and network-restore). Each start reclaims its port first.
     private func recycle(ids: Set<UUID>) {
-        credentialWarmers.removeAll()   // creds may have expired during the outage
+        cachedCreds.removeAll()   // creds may have expired during the outage; one fetch (one prompt) re-acquires
         var offset = 0.0
         for id in ids {
             guard let connection = store.connection(id: id) else { continue }
@@ -412,24 +434,49 @@ final class TunnelManager: ObservableObject {
         }
     }
 
-    /// Ensure credentials for `profile` are warm before any tunnel for it spawns.
-    /// Concurrent callers share one warming task → exactly one MFA prompt per profile.
-    private func ensureCredentials(profile: String, vault: String) async {
-        if let existing = credentialWarmers[profile] {
-            await existing.value
-            return
+    /// Obtain temp credentials for `profile`, fetching from aws-vault at most once
+    /// (D1). A valid cache is reused; concurrent callers join the single in-flight
+    /// fetch, so N tunnels for one profile trigger ONE aws-vault prompt.
+    private func credentials(for profile: String, vault: String) async -> VaultCredentials? {
+        if let cached = cachedCreds[profile], !cached.isExpired { return cached }
+        if let inflight = credFetch[profile] { return await inflight.value }  // join existing fetch
+
+        let env = baseEnvironment()
+        let aws = awsPath
+        let task = Task<VaultCredentials?, Never> { () -> VaultCredentials? in
+            await Task.detached(priority: .userInitiated) { () -> VaultCredentials? in
+                // The ONE aws-vault invocation that touches the credential store.
+                guard let result = try? CommandRunner.run(
+                    executable: vault,
+                    arguments: ["exec", profile, "--prompt=osascript", "--", "env"],
+                    environment: env
+                ), result.exitCode == 0, var creds = VaultCredentials.parse(env: result.stdout) else {
+                    return nil
+                }
+                // Region fallback from profile config (no credentials/prompt).
+                if creds.region == nil, let aws,
+                   let reg = try? CommandRunner.run(
+                       executable: aws,
+                       arguments: ["configure", "get", "region", "--profile", profile],
+                       environment: env),
+                   reg.exitCode == 0 {
+                    let region = reg.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !region.isEmpty { creds = creds.withRegion(region) }
+                }
+                return creds
+            }.value
         }
-        let env = childEnvironment()
-        let task = Task.detached(priority: .userInitiated) {
-            // A cheap call that forces aws-vault to acquire + cache session creds.
-            _ = try? CommandRunner.run(
-                executable: vault,
-                arguments: ["exec", profile, "--prompt=osascript", "--", "aws", "sts", "get-caller-identity"],
-                environment: env
-            )
-        }
-        credentialWarmers[profile] = task   // atomic on @MainActor: later starts see it
-        await task.value
+        credFetch[profile] = task
+        let creds = await task.value
+        credFetch[profile] = nil
+        if let creds { cachedCreds[profile] = creds }
+        return creds
+    }
+
+    /// Drop cached credentials for a profile (e.g. an `aws` call hit an auth error)
+    /// so the next connect re-fetches — still one prompt via the join above.
+    private func invalidateCredentials(profile: String) {
+        cachedCreds[profile] = nil
     }
 
     // MARK: - Teardown
@@ -467,11 +514,11 @@ final class TunnelManager: ObservableObject {
     // MARK: - Helpers
 
     private func ssmArguments(connection: Connection, target: String) -> [String] {
-        // Literal JSON passed as ONE argv element — no shell, no escaping (D1).
+        // Plain `aws ssm` — credentials injected via environment, no aws-vault wrapper.
+        // Literal JSON passed as ONE argv element — no shell, no escaping.
         let parameters = "{\"host\":[\"\(connection.dbHost)\"],\"portNumber\":[\"\(connection.remotePort)\"],\"localPortNumber\":[\"\(connection.localPort)\"]}"
         return [
-            "exec", connection.awsProfile, "--prompt=osascript", "--",
-            "aws", "ssm", "start-session",
+            "ssm", "start-session",
             "--target", target,
             "--document-name", "AWS-StartPortForwardingSessionToRemoteHost",
             "--parameters", parameters,

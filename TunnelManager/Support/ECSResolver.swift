@@ -5,9 +5,9 @@ import Foundation
 struct ECSResolver {
     /// Inputs needed to run the two aws calls under aws-vault.
     struct Context {
-        let awsVaultPath: String
+        let awsPath: String
+        /// Environment with injected AWS credentials (no aws-vault wrapper).
         let environment: [String: String]
-        let profile: String
         let cluster: String
         /// Used to pick a container in a multi-container task.
         let remotePort: Int
@@ -35,13 +35,13 @@ struct ECSResolver {
 
     // Run off the main actor (blocking aws calls).
     static func resolve(_ ctx: Context) throws -> Resolution {
-        let listArgs = vaultArgs(ctx, [
-            "aws", "ecs", "list-tasks",
+        let listArgs = [
+            "ecs", "list-tasks",
             "--cluster", ctx.cluster,
             "--desired-status", "RUNNING",
             "--output", "json",
-        ])
-        let listResult = try CommandRunner.run(executable: ctx.awsVaultPath, arguments: listArgs, environment: ctx.environment)
+        ]
+        let listResult = try CommandRunner.run(executable: ctx.awsPath, arguments: listArgs, environment: ctx.environment)
         guard listResult.exitCode == 0 else {
             throw ResolveError.awsError(listResult.stderr.isEmpty ? "list-tasks failed" : listResult.stderr)
         }
@@ -53,13 +53,13 @@ struct ECSResolver {
         // v1: first RUNNING task (design D6). Log the choice.
         NSLog("ECS resolve: %d running task(s) in %@, choosing %@", taskArns.count, ctx.cluster, firstArn)
 
-        let describeArgs = vaultArgs(ctx, [
-            "aws", "ecs", "describe-tasks",
+        let describeArgs = [
+            "ecs", "describe-tasks",
             "--cluster", ctx.cluster,
             "--tasks", firstArn,
             "--output", "json",
-        ])
-        let describeResult = try CommandRunner.run(executable: ctx.awsVaultPath, arguments: describeArgs, environment: ctx.environment)
+        ]
+        let describeResult = try CommandRunner.run(executable: ctx.awsPath, arguments: describeArgs, environment: ctx.environment)
         guard describeResult.exitCode == 0 else {
             throw ResolveError.awsError(describeResult.stderr.isEmpty ? "describe-tasks failed" : describeResult.stderr)
         }
@@ -68,10 +68,6 @@ struct ECSResolver {
         NSLog("ECS resolve: task %@ container %@ runtime %@", taskId, containerName, runtimeId)
         let target = "ecs:\(ctx.cluster)_\(taskId)_\(runtimeId)"
         return Resolution(target: target, chosenTaskId: taskId, chosenContainerName: containerName)
-    }
-
-    private static func vaultArgs(_ ctx: Context, _ command: [String]) -> [String] {
-        ["exec", ctx.profile, "--prompt=osascript", "--"] + command
     }
 
     // MARK: - Parsing (Codable, not regex)
