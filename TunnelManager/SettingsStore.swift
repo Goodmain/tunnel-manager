@@ -21,6 +21,17 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(autoReconnect, forKey: Keys.autoReconnect) }
     }
 
+    /// Max consecutive failed reconnects before a tunnel settles in `failed`.
+    @Published var maxReconnectAttempts: Int {
+        didSet { defaults.set(maxReconnectAttempts, forKey: Keys.maxReconnectAttempts) }
+    }
+
+    /// When true, kill whatever process is holding the local port before starting,
+    /// instead of failing with an orphan message (network-drop recovery follow-up).
+    @Published var killOrphanOnPort: Bool {
+        didSet { defaults.set(killOrphanOnPort, forKey: Keys.killOrphanOnPort) }
+    }
+
     /// Optional override directory for aws-vault / aws / session-manager-plugin (design D1).
     @Published var binaryDirectoryOverride: String {
         didSet { defaults.set(binaryDirectoryOverride, forKey: Keys.binaryDir) }
@@ -35,6 +46,8 @@ final class SettingsStore: ObservableObject {
         static let reconnectDelay = "settings.reconnectDelay"
         static let autoReconnect = "settings.autoReconnect"
         static let binaryDir = "settings.binaryDirectoryOverride"
+        static let killOrphanOnPort = "settings.killOrphanOnPort"
+        static let maxReconnectAttempts = "settings.maxReconnectAttempts"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -42,6 +55,8 @@ final class SettingsStore: ObservableObject {
         self.defaultAWSProfile = defaults.string(forKey: Keys.defaultProfile) ?? ""
         self.reconnectDelay = defaults.object(forKey: Keys.reconnectDelay) as? Double ?? 5.0
         self.autoReconnect = defaults.object(forKey: Keys.autoReconnect) as? Bool ?? true
+        self.killOrphanOnPort = defaults.object(forKey: Keys.killOrphanOnPort) as? Bool ?? false
+        self.maxReconnectAttempts = defaults.object(forKey: Keys.maxReconnectAttempts) as? Int ?? 5
         self.binaryDirectoryOverride = defaults.string(forKey: Keys.binaryDir) ?? ""
         self.launchAtLogin = (SMAppService.mainApp.status == .enabled)
     }
