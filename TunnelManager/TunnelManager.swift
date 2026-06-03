@@ -13,8 +13,13 @@ final class TunnelManager: ObservableObject {
     @Published private(set) var states: [UUID: TunnelState] = [:]
     /// Count of connected tunnels, drives the menu bar icon (D19).
     @Published private(set) var activeCount: Int = 0
+    /// Count of connecting/reconnecting tunnels; drives the orange in-progress icon.
+    @Published private(set) var connectingCount: Int = 0
     /// Whether `aws-vault` was found on launch (preflight, D1).
     @Published private(set) var dependencyError: String?
+    /// Connections the user currently wants up. Drives the row toggle so it stays
+    /// on through connecting/reconnecting and only off on stop or terminal failure.
+    @Published private(set) var wanted: Set<UUID> = []
 
     private let store: ConnectionStore
     private let settings: SettingsStore
@@ -86,8 +91,7 @@ final class TunnelManager: ObservableObject {
                 self.dependencyError = missing.isEmpty
                     ? nil
                     : "Missing on PATH: \(missing.joined(separator: ", ")). Install them or set a binary directory in Settings."
-                NSLog("[TunnelManager] PATH=%@ aws-vault=%@ aws=%@ plugin=%@", path,
-                      found.vault ?? "MISSING", found.aws ?? "MISSING", found.plugin ?? "MISSING")
+                self.log(nil, "configured — aws-vault=\(found.vault ?? "MISSING") aws=\(found.aws ?? "MISSING") plugin=\(found.plugin ?? "MISSING")")
             }
         }
     }
@@ -114,12 +118,53 @@ final class TunnelManager: ObservableObject {
 
     func state(for id: UUID) -> TunnelState { states[id] ?? .disconnected }
     func lastError(for id: UUID) -> String? { states[id]?.failureMessage }
+    func isWanted(_ id: UUID) -> Bool { wanted.contains(id) }
+
+    // MARK: - Intent + logging
+
+    /// Set whether the user wants a connection up. Keeps `intent` (internal gate)
+    /// and `wanted` (published, drives the toggle) in sync.
+    private func setWanted(_ id: UUID, _ on: Bool) {
+        intent[id] = on
+        if on { wanted.insert(id) } else { wanted.remove(id) }
+    }
+
+    private static let logClock: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss.SSS"
+        return f
+    }()
+
+    /// Structured log: `[HH:mm:ss.SSS] [name#id8] [state] message` (diagnostics-logging).
+    private func log(_ id: UUID?, _ message: String) {
+        let time = Self.logClock.string(from: Date())
+        let line: String
+        if let id {
+            let name = store.connection(id: id)?.name.isEmpty == false
+                ? store.connection(id: id)!.name : "?"
+            let short = String(id.uuidString.prefix(8))
+            line = "\(time) [\(name)#\(short)] [\(stateLabel(state(for: id)))] \(message)"
+        } else {
+            line = "\(time) [app] \(message)"
+        }
+        NSLog("%@", line)
+        FileLogger.shared.write(line)   // durable, rotating file (~/Library/Logs/TunnelManager)
+    }
+
+    private func stateLabel(_ s: TunnelState) -> String {
+        switch s {
+        case .disconnected: return "disconnected"
+        case .connecting: return "connecting"
+        case .connected: return "connected"
+        case .reconnecting: return "reconnecting"
+        case .failed: return "failed"
+        }
+    }
 
     // MARK: - Toggle / start / stop
 
     func toggle(_ connection: Connection) {
-        let current = state(for: connection.id)
-        if current.isActive || current.isBusy {
+        if isWanted(connection.id) {
             stop(id: connection.id, intentional: true)
         } else {
             start(connection)
@@ -128,11 +173,13 @@ final class TunnelManager: ObservableObject {
 
     func start(_ connection: Connection) {
         let id = connection.id
-        intent[id] = true
+        setWanted(id, true)
         cancelReconnect(id: id)
         startTasks[id]?.cancel()
+        log(id, "start requested")
 
         guard let vault = awsVaultPath else {
+            setWanted(id, false)
             setState(id, .failed("aws-vault not found. Check Settings."))
             return
         }
@@ -152,16 +199,20 @@ final class TunnelManager: ObservableObject {
         // Pre-flight: free the local port. Recycle our own stale process (e.g. a
         // wedged tunnel after a network drop); only a foreign holder is an orphan.
         let port = connection.localPort
-        guard await reclaimPort(id: id, port: port) else { return }  // sets .failed on foreign orphan
+        if let portError = await reclaimPort(id: id, port: port) {
+            failAttempt(id: id, reason: portError)
+            return
+        }
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
 
         // Fetch credentials ONCE per profile (one prompt), then run aws directly.
         guard let _ = await credentials(for: connection.awsProfile, vault: vault) else {
-            setState(id, .failed("Could not obtain credentials from aws-vault for profile \(connection.awsProfile)."))
+            failAttempt(id: id, reason: "Could not obtain credentials from aws-vault for profile \(connection.awsProfile).")
             return
         }
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
         guard let aws = awsPath else {
+            setWanted(id, false)
             setState(id, .failed("aws CLI not found. Check Settings."))
             return
         }
@@ -179,9 +230,10 @@ final class TunnelManager: ObservableObject {
             }.value
         } catch {
             invalidateCredentials(profile: connection.awsProfile)  // maybe expired; refetch next time
-            setState(id, .failed(error.localizedDescription))
+            failAttempt(id: id, reason: error.localizedDescription)
             return
         }
+        log(id, "ECS target \(resolution.target) (container \(resolution.chosenContainerName))")
         if Task.isCancelled || intent[id] != true { setState(id, .disconnected); return }
 
         // Spawn the long-running tunnel (own process group, D2), aws directly.
@@ -197,7 +249,7 @@ final class TunnelManager: ObservableObject {
                 Task { @MainActor in self?.handleTermination(id: id, exitCode: code) }
             }
         ) else {
-            setState(id, .failed("Failed to launch aws (posix_spawn failed)."))
+            failAttempt(id: id, reason: "Failed to launch aws (posix_spawn failed).")
             return
         }
         processes[id] = process
@@ -225,12 +277,13 @@ final class TunnelManager: ObservableObject {
             setState(id, .connected)
         } else {
             teardownProcess(id: id)
-            setState(id, .failed("Tunnel did not become ready within \(Int(readinessTimeout))s. \(lastOutput[id] ?? "")".trimmingCharacters(in: .whitespaces)))
+            let tail = (lastOutput[id]?.split(separator: "\n").last).map { " \($0)" } ?? ""
+            failAttempt(id: id, reason: "Did not become ready within \(Int(readinessTimeout))s.\(tail)")
         }
     }
 
     func stop(id: UUID, intentional: Bool) {
-        if intentional { intent[id] = false }
+        if intentional { setWanted(id, false); log(id, "stop requested (user)") }
         cancelReconnect(id: id)
         startTasks[id]?.cancel()
         startTasks[id] = nil
@@ -262,13 +315,8 @@ final class TunnelManager: ObservableObject {
         // Intentional stop already settled the state.
         guard intent[id] == true else { return }
 
-        // Log exit code + captured output on unexpected exit so the real error is visible.
-        let out = lastOutput[id] ?? ""
-        if out.isEmpty {
-            NSLog("[tunnel %@] exited unexpectedly, code=%d, no output. (127=exec failed)", id.uuidString.prefix(8) as CVarArg, exitCode)
-        } else {
-            NSLog("[tunnel %@] exited unexpectedly, code=%d. Output:\n%@", id.uuidString.prefix(8) as CVarArg, exitCode, out)
-        }
+        let lastLine = (lastOutput[id]?.split(separator: "\n").last).map(String.init) ?? ""
+        log(id, "process exited unexpectedly (code \(exitCode))\(lastLine.isEmpty ? "" : ": \(lastLine)")")
 
         // Sleep- or network-induced drop: don't count toward the cap; wait for
         // wake / network restore to recycle (D14 + network-drop recovery).
@@ -278,19 +326,12 @@ final class TunnelManager: ObservableObject {
         }
 
         guard settings.autoReconnect else {
-            setState(id, .disconnected)
+            setWanted(id, false)
+            setState(id, .failed(lastLine.isEmpty ? "Tunnel dropped (auto-reconnect off)." : lastLine))
             return
         }
 
-        let cap = settings.maxReconnectAttempts
-        let attempts = (reconnectAttempts[id] ?? 0) + 1
-        reconnectAttempts[id] = attempts
-        if attempts > cap {
-            let detail = (lastOutput[id]?.split(separator: "\n").last).map { " Last: \($0)" } ?? ""
-            setState(id, .failed("Stopped after \(cap) failed reconnects.\(detail)"))
-            return
-        }
-        scheduleReconnect(id: id, delay: settings.reconnectDelay)
+        failAttempt(id: id, reason: lastLine.isEmpty ? "tunnel dropped (exit \(exitCode))" : lastLine)
     }
 
     private func scheduleReconnect(id: UUID, delay: TimeInterval) {
@@ -311,21 +352,22 @@ final class TunnelManager: ObservableObject {
 
     // MARK: - Port reclamation (network-drop recovery: own stale vs foreign orphan)
 
-    /// Make `port` free before spawning. Returns true to proceed; false means a
-    /// foreign process holds it (state already set to `.failed`).
-    private func reclaimPort(id: UUID, port: Int) async -> Bool {
+    /// Make `port` free before spawning. Returns nil to proceed, or an error reason
+    /// (a foreign process holds it) for the caller to route through `failAttempt`.
+    private func reclaimPort(id: UUID, port: Int) async -> String? {
         // 1. Our own tracked process for this connection (e.g. wedged after a
         //    network drop, process never exited): tear it down and reuse the port.
         if let process = processes[id] {
             processes[id] = nil
             spawnedPgids[id] = nil
+            log(id, "reclaiming own stale process before restart")
             await Task.detached { process.terminateGroupBlocking(timeout: 2.0) }.value
             _ = await Task.detached { PortProbe.waitUntilFree(port: port, timeout: 2.0) }.value
-            return true
+            return nil
         }
 
         let occupied = await Task.detached { PortProbe.isListening(port: port) }.value
-        guard occupied else { return true }
+        guard occupied else { return nil }
 
         let holder = await Task.detached { PortProbe.holdingPID(port: port) }.value
 
@@ -336,7 +378,7 @@ final class TunnelManager: ObservableObject {
             spawnedPgids[id] = nil
             await Task.detached { _ = kill(-pgid, SIGKILL) }.value
             _ = await Task.detached { PortProbe.waitUntilFree(port: port, timeout: 2.0) }.value
-            return true
+            return nil
         }
 
         // 3. A foreign process holds the port. If the user opted in, kill it and
@@ -350,14 +392,13 @@ final class TunnelManager: ObservableObject {
                 return PortProbe.waitUntilFree(port: port, timeout: 1.5)
             }.value
             if freed {
-                NSLog("[tunnel %@] killed process %d holding port %d (killOrphanOnPort)", id.uuidString.prefix(8) as CVarArg, holder, port)
-                return true
+                log(id, "killed process \(holder) holding port \(port) (killOrphanOnPort)")
+                return nil
             }
         }
 
         let pidText = holder.map { " (PID \($0))" } ?? ""
-        setState(id, .failed("Local port \(port) in use\(pidText) — possibly an orphaned tunnel from a previous session."))
-        return false
+        return "Local port \(port) in use\(pidText) — possibly an orphaned tunnel from a previous session."
     }
 
     // MARK: - Sleep / wake (D14)
@@ -494,6 +535,7 @@ final class TunnelManager: ObservableObject {
     /// Clears the process map so a follow-up `terminateAll()` is a no-op.
     func prepareForQuit() -> [SpawnedProcess] {
         for id in Array(intent.keys) { intent[id] = false }   // nothing is "wanted" anymore
+        wanted.removeAll()
         reconnectWork.values.forEach { $0.cancel() }
         reconnectWork.removeAll()
         startTasks.values.forEach { $0.cancel() }
@@ -539,7 +581,31 @@ final class TunnelManager: ObservableObject {
     }
 
     private func setState(_ id: UUID, _ newState: TunnelState) {
+        let old = state(for: id)
         states[id] = newState
         activeCount = states.values.filter { $0.isActive }.count
+        connectingCount = states.values.filter { $0.isBusy }.count
+        if stateLabel(old) != stateLabel(newState) {
+            var line = "\(stateLabel(old)) → \(stateLabel(newState))"
+            if let msg = newState.failureMessage { line += ": \(msg)" }
+            log(id, line)
+        }
+    }
+
+    /// Single failure path (D1): retry within the cap while the connection is
+    /// wanted + auto-reconnect is on; otherwise terminal `failed` (uncheck + error).
+    private func failAttempt(id: UUID, reason: String) {
+        guard intent[id] == true else { setState(id, .disconnected); return }  // user already stopped
+        let cap = settings.maxReconnectAttempts
+        let attempts = (reconnectAttempts[id] ?? 0) + 1
+        if settings.autoReconnect && attempts <= cap {
+            reconnectAttempts[id] = attempts
+            log(id, "attempt \(attempts)/\(cap) failed: \(reason) — retrying in \(Int(settings.reconnectDelay))s")
+            scheduleReconnect(id: id, delay: settings.reconnectDelay)
+        } else {
+            log(id, "giving up after \(attempts - 1)/\(cap) attempts: \(reason)")
+            setWanted(id, false)
+            setState(id, .failed(reason))
+        }
     }
 }
