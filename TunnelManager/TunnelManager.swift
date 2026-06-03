@@ -385,9 +385,9 @@ final class TunnelManager: ObservableObject {
     // MARK: - Network monitoring (network-drop recovery)
 
     private func startNetworkMonitor() {
-        pathMonitor.pathUpdateHandler = { [weak self] path in
+        pathMonitor.pathUpdateHandler = { path in
             let satisfied = path.status == .satisfied
-            Task { @MainActor in self?.handleNetwork(satisfied: satisfied) }
+            Task { @MainActor [weak self] in self?.handleNetwork(satisfied: satisfied) }
         }
         pathMonitor.start(queue: DispatchQueue(label: "tunnelmanager.network", qos: .utility))
     }
