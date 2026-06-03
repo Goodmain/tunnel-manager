@@ -40,7 +40,9 @@ struct ConnectionRowView: View {
             PortChip(port: connection.localPort)
 
             Toggle("", isOn: Binding(
-                get: { state.isActive || state.isBusy },
+                // Reflects user intent: stays on through connecting/reconnecting,
+                // off only on user stop or terminal failure.
+                get: { tunnels.isWanted(connection.id) },
                 set: { _ in tunnels.toggle(connection) }
             ))
             .labelsHidden()

@@ -27,8 +27,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Update the icon whenever the active-tunnel count changes (D19).
         tunnelManager.$activeCount
+            .combineLatest(tunnelManager.$connectingCount)
             .receive(on: RunLoop.main)
-            .sink { [weak self] count in self?.updateIcon(activeCount: count) }
+            .sink { [weak self] active, connecting in
+                self?.updateIcon(activeCount: active, connectingCount: connecting)
+            }
             .store(in: &cancellables)
     }
 
@@ -70,29 +73,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.action = #selector(togglePopover)
         statusItem.button?.target = self
         statusItem.button?.imageScaling = .scaleProportionallyDown
-        updateIcon(activeCount: 0)
+        updateIcon(activeCount: 0, connectingCount: 0)
         NSLog("[TunnelManager] status item created, button=%@", statusItem.button != nil ? "yes" : "nil")
     }
 
     /// Custom three-dot glyph (template) from the asset catalog; tinted green when
     /// any tunnel is active. Template images accept `contentTintColor`, so one
     /// image covers both states (D19).
-    private func updateIcon(activeCount: Int) {
+    /// Color precedence: any connecting/reconnecting → orange; else any connected →
+    /// green; else idle (template). Status-bar buttons ignore contentTintColor on
+    /// template images, so colors are baked into a non-template image.
+    private func updateIcon(activeCount: Int, connectingCount: Int) {
         guard let button = statusItem.button else { return }
-        // Prefer the bundled StatusBarIcon; fall back to an SF Symbol, then text.
         let base = NSImage(named: "StatusBarIcon")
             ?? NSImage(systemSymbolName: "point.3.connected.trianglepath.dotted",
                        accessibilityDescription: "Tunnel Manager")
         base?.size = NSSize(width: 18, height: 18)
 
-        if activeCount > 0 {
-            // Status-bar buttons IGNORE contentTintColor for template images, so
-            // bake the green into a non-template image instead.
+        if connectingCount > 0 {
+            button.image = base.map { Self.tinted($0, with: .systemOrange) }
+            button.contentTintColor = nil
+            button.title = activeCount > 0 ? " \(activeCount)" : ""
+        } else if activeCount > 0 {
             button.image = base.map { Self.tinted($0, with: .systemGreen) }
             button.contentTintColor = nil
             button.title = " \(activeCount)"
         } else {
-            base?.isTemplate = true   // adapts black/white to the menu bar
+            base?.isTemplate = true   // idle: adapts black/white to the menu bar
             button.image = base
             button.contentTintColor = nil
             button.title = ""

@@ -68,6 +68,11 @@ struct SettingsView: View {
                 }
 
                 Divider()
+                Button("Reveal Logs in Finder") {
+                    let logger = FileLogger.shared
+                    NSWorkspace.shared.activateFileViewerSelecting([logger.logFileURL])
+                }
+                .controlSize(.small)
                 Button("Quit Tunnel Manager") {
                     NSApplication.shared.terminate(nil)
                 }
