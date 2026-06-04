@@ -11,6 +11,12 @@ final class ConnectionStore: ObservableObject {
     private let storageKey = "connections.v1"
     private var cancellables = Set<AnyCancellable>()
 
+    /// Connections ordered A-Z by name (case-insensitive) for display. Storage
+    /// order is unchanged.
+    var sortedConnections: [Connection] {
+        connections.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.connections = Self.load(from: defaults, key: storageKey)

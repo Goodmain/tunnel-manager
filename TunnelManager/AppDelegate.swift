@@ -13,6 +13,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore = SettingsStore()
     private let profileStore = AWSProfileStore()
     private lazy var tunnelManager = TunnelManager(store: connectionStore, settings: settingsStore)
+    private let coordinator = AppCoordinator()
+    private lazy var managementWindow = ManagementWindowController(
+        connectionStore: connectionStore, settingsStore: settingsStore,
+        tunnelManager: tunnelManager, profileStore: profileStore
+    )
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -22,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         tunnelManager.configure()
         profileStore.refresh()
+        coordinator.open = { [weak self] section in self?.managementWindow.show(section) }
         setupStatusItem()
         setupPopover()
 
@@ -135,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .environmentObject(settingsStore)
             .environmentObject(tunnelManager)
             .environmentObject(profileStore)
+            .environmentObject(coordinator)
         popover.contentViewController = NSHostingController(rootView: root)
     }
 

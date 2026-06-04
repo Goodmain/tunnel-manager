@@ -73,10 +73,6 @@ struct SettingsView: View {
                     NSWorkspace.shared.activateFileViewerSelecting([logger.logFileURL])
                 }
                 .controlSize(.small)
-                Button("Quit Tunnel Manager") {
-                    NSApplication.shared.terminate(nil)
-                }
-                .controlSize(.small)
             }
             .padding(12)
         }
