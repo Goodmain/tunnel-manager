@@ -6,7 +6,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AB0000000000000000000002 /* TunnelManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000001 /* TunnelManagerApp.swift */; };
+		AB0000000000000000000002 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000001 /* main.swift */; };
 		AB0000000000000000000004 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000003 /* AppDelegate.swift */; };
 		AB0000000000000000000006 /* TunnelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000005 /* TunnelManager.swift */; };
 		AB0000000000000000000008 /* ConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000007 /* ConnectionStore.swift */; };
@@ -52,7 +52,7 @@
 /* Begin PBXFileReference section */
 		AB000000000000000000003F /* TunnelManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TunnelManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB0000000000000000000040 /* TunnelManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TunnelManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		AB0000000000000000000001 /* TunnelManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManagerApp.swift; sourceTree = "<group>"; };
+		AB0000000000000000000001 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AB0000000000000000000003 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB0000000000000000000005 /* TunnelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManager.swift; sourceTree = "<group>"; };
 		AB0000000000000000000007 /* ConnectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStore.swift; sourceTree = "<group>"; };
@@ -126,7 +126,7 @@
 		AB0000000000000000000044 /* TunnelManager */ = {
 			isa = PBXGroup;
 			children = (
-				AB0000000000000000000001 /* TunnelManagerApp.swift */,
+				AB0000000000000000000001 /* main.swift */,
 				AB0000000000000000000003 /* AppDelegate.swift */,
 				AB0000000000000000000005 /* TunnelManager.swift */,
 				AB0000000000000000000007 /* ConnectionStore.swift */,
@@ -293,7 +293,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB0000000000000000000002 /* TunnelManagerApp.swift in Sources */,
+				AB0000000000000000000002 /* main.swift in Sources */,
 				AB0000000000000000000004 /* AppDelegate.swift in Sources */,
 				AB0000000000000000000006 /* TunnelManager.swift in Sources */,
 				AB0000000000000000000008 /* ConnectionStore.swift in Sources */,
